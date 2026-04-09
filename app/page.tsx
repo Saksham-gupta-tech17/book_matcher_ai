@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Hero from "@/components/Hero";
 import BookGrid from "@/components/BookGrid";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { motion } from "framer-motion";
-import { BookOpen, Sparkles, TrendingUp, Users } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { BookOpen, Sparkles, TrendingUp, Users, ChevronUp } from "lucide-react";
 
 // Mock data for initial display
 const initialBooks = [
@@ -150,6 +150,32 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [apiSummary, setApiSummary] = useState<string>("");
   const [dataSource, setDataSource] = useState<string>("mock");
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+  
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to results when recommendations change
+  useEffect(() => {
+    if (hasSearched && !loading && resultsRef.current) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 100);
+    }
+  }, [recommendations, hasSearched, loading]);
+
+  // Show/hide scroll to top button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollToTop(window.scrollY > 500);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Fetch recommendations from API
   const fetchRecommendations = async (query: string) => {
@@ -228,18 +254,26 @@ export default function Home() {
     },
   ];
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const scrollToHero = () => {
+    heroRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col" ref={heroRef}>
       <Hero onSearch={handleSearch} />
 
-      {/* Features section */}
-      <section className="px-6 py-20 bg-gradient-to-b from-background to-card/30">
+      {/* Features section - reduced spacing */}
+      <section className="px-6 py-12 md:py-16 bg-gradient-to-b from-background to-card/30">
         <div className="container mx-auto max-w-6xl">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
+            viewport={{ once: true, margin: "-100px" }}
+            className="text-center mb-12"
           >
             <h2 className="text-3xl font-bold md:text-4xl">
               Why Readers Love{" "}
@@ -247,7 +281,7 @@ export default function Home() {
                 BookMatch AI
               </span>
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground max-w-3xl mx-auto">
+            <p className="mt-3 text-lg text-muted-foreground max-w-3xl mx-auto">
               We combine cutting‑edge AI with deep literary knowledge to
               deliver recommendations that feel human‑curated.
             </p>
@@ -277,125 +311,142 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Recommendations section */}
-      <section className="px-6 py-20">
+      {/* Recommendations section - with ref for auto-scroll */}
+      <section ref={resultsRef} className="px-6 py-12 md:py-16">
         <div className="container mx-auto max-w-7xl">
-          {loading ? (
-            <LoadingSpinner message="Finding your perfect reads..." />
-          ) : (
-            <>
+          <AnimatePresence mode="wait">
+            {loading ? (
               <motion.div
+                key="loading"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="py-20"
+              >
+                <LoadingSpinner message="Finding your perfect reads..." />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="results"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="mb-12 text-center"
+                transition={{ duration: 0.5 }}
+                className="space-y-8"
               >
-                <h2 className="text-3xl font-bold md:text-4xl">
-                  {hasSearched
-                    ? "Your Personalized Recommendations"
-                    : "Curated Picks You Might Love"}
-                </h2>
-                <p className="mt-4 text-lg text-muted-foreground max-w-3xl mx-auto">
-                  {hasSearched
-                    ? "Based on your search, here are hand‑picked books that match your taste."
-                    : "Explore these popular titles to get started."}
-                </p>
-              </motion.div>
-
-              {error && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-8 rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-center"
+                  transition={{ delay: 0.1 }}
+                  className="text-center"
                 >
-                  <div className="text-red-400 font-medium">Error: {error}</div>
-                  <p className="mt-2 text-sm text-red-400/80">
-                    Please try again or use a different search term.
+                  <h2 className="text-3xl font-bold md:text-4xl">
+                    {hasSearched
+                      ? "Your Personalized Recommendations"
+                      : "Curated Picks You Might Love"}
+                  </h2>
+                  <p className="mt-4 text-lg text-muted-foreground max-w-3xl mx-auto">
+                    {hasSearched
+                      ? "Based on your search, here are hand‑picked books that match your taste."
+                      : "Explore these popular titles to get started."}
                   </p>
                 </motion.div>
-              )}
 
-              {/* Data source badge */}
-              {hasSearched && dataSource && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mb-6 flex justify-center"
-                >
-                  <div className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-medium ${
-                    dataSource === "google-books"
-                      ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                      : dataSource === "cache"
-                      ? "bg-teal-500/10 text-teal-400 border border-teal-500/20"
-                      : dataSource === "ai-simulation"
-                      ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
-                      : dataSource === "ai-google-hybrid"
-                      ? "bg-teal-500/10 text-teal-400 border border-teal-500/20"
-                      : dataSource === "mock-data"
-                      ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
-                      : dataSource === "mock-fallback"
-                      ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
-                      : dataSource === "mock-no-key"
-                      ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
-                      : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                  }`}>
-                    <span className="mr-2">•</span>
-                    {dataSource === "google-books"
-                      ? "Powered by Google Books API"
-                      : dataSource === "cache"
-                      ? "Served from cache (5 min TTL)"
-                      : dataSource === "ai-simulation"
-                      ? "AI-Powered Recommendations"
-                      : dataSource === "ai-google-hybrid"
-                      ? "AI + Google Books Hybrid"
-                      : dataSource === "mock-data"
-                      ? "Using sample data (API unavailable)"
-                      : dataSource === "mock-fallback"
-                      ? "Using sample data (API unavailable)"
-                      : dataSource === "mock-no-key"
-                      ? "Using sample data (API key needed)"
-                      : "Using sample data"}
-                  </div>
-                </motion.div>
-              )}
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-8 rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-center"
+                  >
+                    <div className="text-red-400 font-medium">Error: {error}</div>
+                    <p className="mt-2 text-sm text-red-400/80">
+                      Please try again or use a different search term.
+                    </p>
+                  </motion.div>
+                )}
 
-              <BookGrid
-                books={recommendations}
-                summary={apiSummary || (hasSearched
-                  ? "Each recommendation is tailored to your preferences, considering genre, mood, and reading style."
-                  : "A selection of highly‑rated books across genres to inspire your next read.")}
-              />
-            </>
-          )}
+                {/* Data source badge */}
+                {hasSearched && dataSource && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6 flex justify-center"
+                  >
+                    <div className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-medium ${
+                      dataSource === "google-books"
+                        ? "bg-green-500/10 text-green-400 border border-green-500/20"
+                        : dataSource === "cache"
+                        ? "bg-teal-500/10 text-teal-400 border border-teal-500/20"
+                        : dataSource === "ai-simulation"
+                        ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
+                        : dataSource === "ai-google-hybrid"
+                        ? "bg-teal-500/10 text-teal-400 border border-teal-500/20"
+                        : dataSource === "mock-data"
+                        ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
+                        : dataSource === "mock-fallback"
+                        ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
+                        : dataSource === "mock-no-key"
+                        ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                        : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                    }`}>
+                      <span className="mr-2">•</span>
+                      {dataSource === "google-books"
+                        ? "Powered by Google Books API"
+                        : dataSource === "cache"
+                        ? "Served from cache (5 min TTL)"
+                        : dataSource === "ai-simulation"
+                        ? "AI-Powered Recommendations"
+                        : dataSource === "ai-google-hybrid"
+                        ? "AI + Google Books Hybrid"
+                        : dataSource === "mock-data"
+                        ? "Using sample data (API unavailable)"
+                        : dataSource === "mock-fallback"
+                        ? "Using sample data (API unavailable)"
+                        : dataSource === "mock-no-key"
+                        ? "Using sample data (API key needed)"
+                        : "Using sample data"}
+                    </div>
+                  </motion.div>
+                )}
+
+                <BookGrid
+                  books={recommendations}
+                  summary={apiSummary || (hasSearched
+                    ? "Each recommendation is tailored to your preferences, considering genre, mood, and reading style."
+                    : "A selection of highly‑rated books across genres to inspire your next read.")}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="px-6 py-20">
+      {/* CTA - reduced spacing */}
+      <section className="px-6 py-16 md:py-20">
         <div className="container mx-auto max-w-4xl text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="rounded-3xl bg-gradient-to-br from-primary/20 to-purple-600/20 border border-white/10 p-12 backdrop-blur-lg"
+            viewport={{ once: true, margin: "-100px" }}
+            className="rounded-3xl bg-gradient-to-br from-primary/20 to-purple-600/20 border border-white/10 p-8 md:p-12 backdrop-blur-lg"
           >
-            <h2 className="text-3xl font-bold md:text-4xl">
+            <h2 className="text-2xl md:text-3xl font-bold">
               Ready to discover your next favorite book?
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
+            <p className="mt-3 text-base md:text-lg text-muted-foreground">
               Join thousands of readers who found their perfect match with
               BookMatch AI.
             </p>
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => handleSearch("fantasy adventure")}
-                className="rounded-full bg-gradient-to-r from-primary to-purple-600 px-8 py-3 font-semibold text-white shadow-lg hover:shadow-xl transition-all"
+                className="rounded-full bg-gradient-to-r from-primary to-purple-600 px-6 py-3 font-semibold text-white shadow-lg hover:shadow-xl transition-all"
                 suppressHydrationWarning
               >
                 Try Fantasy Adventure
               </button>
               <button
                 onClick={() => handleSearch("mystery thriller")}
-                className="rounded-full border border-white/20 bg-card px-8 py-3 font-semibold hover:bg-accent transition-colors"
+                className="rounded-full border border-white/20 bg-card px-6 py-3 font-semibold hover:bg-accent transition-colors"
                 suppressHydrationWarning
               >
                 Explore Mystery
@@ -404,6 +455,22 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* Scroll to top button */}
+      <AnimatePresence>
+        {showScrollToTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all"
+            aria-label="Scroll to top"
+          >
+            <ChevronUp className="h-6 w-6" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

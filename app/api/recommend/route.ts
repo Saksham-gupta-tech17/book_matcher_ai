@@ -4,9 +4,9 @@ import axios from "axios";
 // Configuration
 const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY || "";
 const USE_GOOGLE_API = GOOGLE_BOOKS_API_KEY.length > 0;
-const USE_MOCK_DATA_FALLBACK = process.env.USE_MOCK_DATA_FALLBACK === "true" || true;
+const USE_MOCK_DATA_FALLBACK = process.env.USE_MOCK_DATA_FALLBACK !== "false";
 const MAX_RESULTS_PER_QUERY = 40;
-const MAX_QUERIES = 5;
+const MAX_QUERIES = 2;
 const MAX_TOTAL_BOOKS = 50;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
@@ -318,7 +318,7 @@ async function fetchBooksFromGoogle(query: string, startIndex: number = 0): Prom
       langRestrict: "en"
     };
     
-    const response = await axios.get(url, { params, timeout: 10000 });
+    const response = await axios.get(url, { params, timeout: 3000 });
     
     if (!response.data.items) {
       return [];

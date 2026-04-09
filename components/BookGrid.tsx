@@ -40,36 +40,36 @@ export default function BookGrid({ books, title, summary }: BookGridProps) {
   };
 
   return (
-    <section className="px-6 py-20">
+    <section className="px-4 sm:px-6 py-12 md:py-16">
       <div className="container mx-auto max-w-7xl">
         {(title || summary) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-12 text-center"
+            className="mb-8 md:mb-12 text-center"
           >
             {title && (
-              <h2 className="text-3xl font-bold md:text-4xl">{title}</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold md:text-4xl">{title}</h2>
             )}
             {summary && (
-              <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
+              <p className="mx-auto mt-3 sm:mt-4 max-w-3xl text-base sm:text-lg text-muted-foreground">
                 {summary}
               </p>
             )}
           </motion.div>
         )}
 
-        {/* Genre filter */}
+        {/* Genre filter - mobile optimized */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mb-10 flex flex-wrap justify-center gap-3"
+          className="mb-8 md:mb-10 flex flex-wrap justify-center gap-2 md:gap-3"
         >
           {genres.map((genre) => (
             <button
               key={genre}
               onClick={() => setSelectedGenre(genre)}
-              className={`rounded-full py-2 px-4 text-sm font-medium transition-all ${
+              className={`rounded-full py-1.5 px-3 md:py-2 md:px-4 text-xs md:text-sm font-medium transition-all ${
                 selectedGenre === genre
                   ? "bg-primary text-primary-foreground shadow-md"
                   : "bg-card text-foreground/80 hover:bg-accent"
@@ -81,22 +81,23 @@ export default function BookGrid({ books, title, summary }: BookGridProps) {
           ))}
         </motion.div>
 
-        {/* Book grid */}
+        {/* Book grid - mobile optimized */}
         <AnimatePresence>
           <motion.div
             layout
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8"
           >
             {filteredBooks.map((book, index) => (
               <motion.div
                 key={book.id}
                 layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                whileHover={{ y: -8, transition: { duration: 0.2 } }}
-                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-card shadow-lg hover:shadow-2xl hover:shadow-primary/10 transition-all"
+                transition={{ duration: 0.3, delay: index * 0.03 }}
+                whileHover={{ y: -6, transition: { duration: 0.2 } }}
+                whileTap={{ scale: 0.98 }}
+                className="group relative overflow-hidden rounded-xl md:rounded-2xl border border-white/10 bg-card shadow-lg hover:shadow-xl hover:shadow-primary/10 transition-all"
               >
                 {/* Favorite button */}
                 <button
@@ -114,20 +115,20 @@ export default function BookGrid({ books, title, summary }: BookGridProps) {
                   />
                 </button>
 
-                {/* Book cover */}
-                <div className="relative h-64 overflow-hidden">
+                {/* Book cover - mobile optimized */}
+                <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden">
                   <img
                     src={book.cover}
                     alt={book.title}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4">
+                  <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4">
                     <div className="flex items-center justify-between">
-                      <span className="rounded-full bg-primary/90 px-3 py-1 text-xs font-semibold text-white">
+                      <span className="rounded-full bg-primary/90 px-2 py-1 text-xs font-semibold text-white">
                         {book.genre}
                       </span>
-                      <div className="flex items-center gap-1 rounded-full bg-black/70 px-3 py-1 text-xs text-white">
+                      <div className="flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-xs text-white">
                         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                         <span>{book.rating}</span>
                       </div>
@@ -135,41 +136,41 @@ export default function BookGrid({ books, title, summary }: BookGridProps) {
                   </div>
                 </div>
 
-                {/* Book details */}
-                <div className="p-6">
-                  <h3 className="text-xl font-bold line-clamp-1">
+                {/* Book details - mobile optimized */}
+                <div className="p-4 sm:p-6">
+                  <h3 className="text-lg sm:text-xl font-bold line-clamp-1">
                     {book.title}
                   </h3>
-                  <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                    <User className="h-4 w-4" />
-                    <span>{book.author}</span>
+                  <div className="mt-1 sm:mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                    <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="text-xs sm:text-sm">{book.author}</span>
                   </div>
-                  <p className="mt-3 line-clamp-2 text-sm text-foreground/80">
+                  <p className="mt-2 sm:mt-3 line-clamp-2 text-xs sm:text-sm text-foreground/80">
                     {book.description}
                   </p>
 
-                  <div className="mt-6 flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm">
+                  <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+                    <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm">
                       <div className="flex items-center gap-1">
-                        <BookOpen className="h-4 w-4" />
+                        <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
                         <span>{book.pages} pages</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
+                        <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                         <span>{book.year}</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
                       <button
-                        className="rounded-full p-2 hover:bg-accent"
+                        className="rounded-full p-1.5 sm:p-2 hover:bg-accent"
                         aria-label="Share"
                         suppressHydrationWarning
                       >
-                        <Share2 className="h-4 w-4" />
+                        <Share2 className="h-3 w-3 sm:h-4 sm:w-4" />
                       </button>
                       <button
-                        className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
+                        className="rounded-full bg-primary px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white hover:bg-primary/90"
                         suppressHydrationWarning
                       >
                         Details

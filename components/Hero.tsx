@@ -38,12 +38,38 @@ export default function Hero({ onSearch }: HeroProps) {
   const [exampleIndex] = useState(0);
 
   return (
-    <section className="relative overflow-hidden px-6 py-20 md:py-32">
+    <section className="relative overflow-hidden px-6 py-16 md:py-24">
       {/* Background elements */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-1/4 left-1/4 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl" />
       </div>
+      
+      {/* Loading overlay */}
+      {isLoading && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+        >
+          <div className="text-center">
+            <div className="relative h-16 w-16 mx-auto mb-4">
+              <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-2 rounded-full border-4 border-t-primary border-transparent"
+              />
+              <BookOpen className="absolute inset-0 m-auto h-6 w-6 text-primary" />
+            </div>
+            <p className="text-lg font-medium">Finding your perfect reads...</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Scanning thousands of books for matches
+            </p>
+          </div>
+        </motion.div>
+      )}
 
       <div className="container mx-auto max-w-6xl">
         <motion.div
