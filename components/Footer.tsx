@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
-import TrendingBooksCarousel from "./TrendingBooksCarousel";
+import MoodDiscovery from "./MoodDiscovery";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -10,7 +10,7 @@ export default function Footer() {
   return (
     <>
       <div className="mt-20">
-        <TrendingBooksCarousel />
+        <MoodDiscovery />
       </div>
       <motion.footer
         initial={{ opacity: 0 }}

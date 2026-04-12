@@ -312,7 +312,7 @@ export default function Home() {
       </section>
 
       {/* Recommendations section - with ref for auto-scroll */}
-      <section ref={resultsRef} className="px-6 py-12 md:py-16">
+      <section id="results-section" ref={resultsRef} className="px-6 py-12 md:py-16">
         <div className="container mx-auto max-w-7xl">
           <AnimatePresence mode="wait">
             {loading ? (
