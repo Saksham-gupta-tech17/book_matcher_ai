@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import axios from "axios";
 
 // Configuration
 const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY || "";
@@ -307,52 +306,66 @@ async function fetchBooksFromGoogle(query: string, startIndex: number = 0): Prom
   }
   
   try {
-    const url = `https://www.googleapis.com/books/v1/volumes`;
-    const params = {
-      q: query,
-      key: GOOGLE_BOOKS_API_KEY,
-      maxResults: MAX_RESULTS_PER_QUERY,
-      startIndex,
-      orderBy: "relevance",
-      printType: "books",
-      langRestrict: "en"
-    };
+    const url = new URL(`https://www.googleapis.com/books/v1/volumes`);
+    url.searchParams.append("q", query);
+    if (GOOGLE_BOOKS_API_KEY) url.searchParams.append("key", GOOGLE_BOOKS_API_KEY);
+    url.searchParams.append("maxResults", MAX_RESULTS_PER_QUERY.toString());
+    url.searchParams.append("startIndex", startIndex.toString());
+    url.searchParams.append("orderBy", "relevance");
+    url.searchParams.append("printType", "books");
+    url.searchParams.append("langRestrict", "en");
     
-    const response = await axios.get(url, { params, timeout: 3000 });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     
-    if (!response.data.items) {
-      return [];
-    }
-    
-    return response.data.items.map((item: any) => {
-      const volumeInfo = item.volumeInfo;
-      const id = item.id;
-      const title = volumeInfo.title || "Unknown Title";
-      const authors = volumeInfo.authors || ["Unknown Author"];
-      const description = volumeInfo.description || "No description available.";
-      const imageLinks = volumeInfo.imageLinks || {};
-      const cover = imageLinks.thumbnail || imageLinks.smallThumbnail || "";
-      const publishedDate = volumeInfo.publishedDate || "";
-      const year = publishedDate ? parseInt(publishedDate.substring(0, 4)) : 0;
-      const pageCount = volumeInfo.pageCount || 0;
-      const categories = volumeInfo.categories || [];
-      const averageRating = volumeInfo.averageRating || 0;
-      const ratingsCount = volumeInfo.ratingsCount || 0;
+    try {
+      const response = await fetch(url.toString(), {
+        signal: controller.signal,
+        headers: { Accept: "application/json" },
+      });
       
-      return {
-        id,
-        title,
-        author: authors.join(", "),
-        description: description.substring(0, 300) + (description.length > 300 ? "..." : ""),
-        genre: categories.length > 0 ? categories[0] : "General",
-        rating: averageRating,
-        cover: cover.replace("http://", "https://"),
-        pages: pageCount,
-        year,
-        relevanceScore: 0, // Will be calculated later
-        source: "google-books"
-      };
-    });
+      if (!response.ok) {
+        return [];
+      }
+
+      const data = await response.json();
+      
+      if (!data.items) {
+        return [];
+      }
+      
+      return data.items.map((item: any) => {
+        const volumeInfo = item.volumeInfo;
+        const id = item.id;
+        const title = volumeInfo.title || "Unknown Title";
+        const authors = volumeInfo.authors || ["Unknown Author"];
+        const description = volumeInfo.description || "No description available.";
+        const imageLinks = volumeInfo.imageLinks || {};
+        const cover = imageLinks.thumbnail || imageLinks.smallThumbnail || "";
+        const publishedDate = volumeInfo.publishedDate || "";
+        const year = publishedDate ? parseInt(publishedDate.substring(0, 4)) : 0;
+        const pageCount = volumeInfo.pageCount || 0;
+        const categories = volumeInfo.categories || [];
+        const averageRating = volumeInfo.averageRating || 0;
+        const ratingsCount = volumeInfo.ratingsCount || 0;
+        
+        return {
+          id,
+          title,
+          author: authors.join(", "),
+          description: description.substring(0, 300) + (description.length > 300 ? "..." : ""),
+          genre: categories.length > 0 ? categories[0] : "General",
+          rating: averageRating,
+          cover: cover.replace("http://", "https://"),
+          pages: pageCount,
+          year,
+          relevanceScore: 0, // Will be calculated later
+          source: "google-books"
+        };
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
   } catch (error) {
     console.error(`Error fetching books for query "${query}":`, error);
     return [];
@@ -606,7 +619,17 @@ async function getBookRecommendations(query: string): Promise<{
 
 export async function POST(request: NextRequest) {
   try {
-    const { query } = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (e) {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
+
+    const { query } = body;
 
     if (!query || typeof query !== "string") {
       return NextResponse.json(

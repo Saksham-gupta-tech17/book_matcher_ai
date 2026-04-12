@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Sparkles } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "./ThemeProvider";
 import { Sun, Moon } from "lucide-react";
@@ -69,10 +69,7 @@ export default function Header() {
               )}
             </button>
 
-            <button className="hidden md:flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-purple-600 px-4 py-2 text-sm font-medium text-white hover:shadow-lg hover:shadow-primary/30 transition-all">
-              <Sparkles className="h-4 w-4" />
-              Try Premium
-            </button>
+
           </div>
         </div>
       </div>
