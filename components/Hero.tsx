@@ -132,7 +132,7 @@ export default function Hero({ onSearch }: HeroProps) {
                     </>
                   ) : (
                     <>
-                      Get Recommendations
+                      Explore
                       <ChevronRight className="h-5 w-5" />
                     </>
                   )}
